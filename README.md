@@ -143,23 +143,3 @@ Note: Decreasing the `epsilon_end_episode` could make the agent achieve better r
 #### Tetris
 - Code My Road - https://codemyroad.wordpress.com/2013/04/14/tetris-ai-the-near-perfect-player/ (uses evolutionary strategies)
 
-## Suggested Activities for Students
-
-Here are some simple activities to help you get started with this Tetris RL project:
-
-### Coding
-- **Run the Training Script:** Open a terminal and run `python src/run.py` to start training the AI agent.
-- **Change the Number of Training Episodes:** In `src/run.py`, find the line that sets `episodes = 3000` and try changing it to a smaller or larger number. See how it affects training time.
-- **Change the Model Save Name:** In `src/run.py`, change the filename where the model is saved (e.g., from `models/best.keras` to `models/my_model.keras`).
-
-### Analysis
-- **Look at the Training Output:** Watch the terminal output as the agent trains. Notice how the scores change over time.
-- **Open TensorBoard:** After training, run `tensorboard --logdir ./logs` and open the provided link in your browser to see training graphs.
-
-### Playing
-- **Play Tetris Yourself:** Run `python src/play_human.py` to play Tetris as a human.
-- **Watch the AI Play:** After training, run `python src/run_model.py models/best.keras` to watch the AI play Tetris using the trained model.
-
----
-
-Try these activities to get comfortable with the code and see how the AI learns to play Tetris!
