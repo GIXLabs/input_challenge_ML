@@ -136,7 +136,7 @@ For 2000 episodes, with epsilon ending at 1500, the agent kept going for too lon
 
 Note: Decreasing the `epsilon_end_episode` could make the agent achieve better results in a smaller number of episodes.
 
-## Your Task
+## Your Tasks
 
 1. Navigate to `play_human.py`. Connect your controller to your laptop.
    1. Uncomment Line 27.
@@ -176,6 +176,7 @@ You can achieve this by either following our discussion on Q-learning and contro
    1. How is the trained agent's performance compared to your performance?
    2. Can you identify seme cases where the trained agent may perform poorly?
 
+6. If you get stuck on any of these tasks, feel free to ask or refer to the code in `tetris-ai/`
 
 ## Useful Links
 
@@ -186,4 +187,3 @@ You can achieve this by either following our discussion on Q-learning and contro
 
 #### Tetris
 - Code My Road - https://codemyroad.wordpress.com/2013/04/14/tetris-ai-the-near-perfect-player/ (uses evolutionary strategies)
-
