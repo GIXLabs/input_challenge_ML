@@ -31,11 +31,13 @@
 
 ## Setup
 
+If you are using M1 Macbooks, you may find information contained in this [repo useful to setup your virtual environment](https://github.com/mrdbourke/m1-machine-learning-test).
+After, please follow the steps below to setup your virtual environment. 
+
 1. **Clone the repository**
 2. **Create the conda environment:**
    ```sh
    conda env create -f environment.yml
-   conda activate tetris-ml
    ```
 
 ## Demo
@@ -61,6 +63,7 @@ First 10000 points, after some training.
   ```sh
   tensorboard --logdir ./logs
   ```
+  Then click on the url of your local host to view the board.
 
 ## Environment
 
@@ -132,6 +135,47 @@ For 2000 episodes, with epsilon ending at 1500, the agent kept going for too lon
 ![results](./assets/results.svg)
 
 Note: Decreasing the `epsilon_end_episode` could make the agent achieve better results in a smaller number of episodes.
+
+## Your Task
+
+1. Navigate to `play_human.py`. Connect your controller to your laptop.
+   1. Uncomment Line 27.
+   2. Test buttons on your controller, and find their corresponding code for Lines 6-9. Update the code accordingly.
+   3. Once you complete step 1-2, comment out Line 27.
+
+2. Activate your virtual environment using
+    ```sh
+    conda activate ML-env
+    ```
+    Run the Python script to activate human-play mode:
+    ```py
+    python play_human.py
+    ```
+
+3. Play Tetris for 3 minutes and record your score. 
+   1. How is your experience with the controller?
+   2. What is your strategy to maximize the score?
+
+4. Navigate to `dqn_agent.py` and find `train` function. Complete the following code block (Lines 154 and 156) based on our discussion on Q-learning:
+    ```py
+    # Build xy structure to fit the model in batch (better performance)
+    for i, (state, _, reward, done) in enumerate(batch):
+        if not done:
+            # Partial Q formula
+            # Your code here
+        else:
+            # Your code here
+    ```
+You can achieve this by either following our discussion on Q-learning and control flow, or trying out vibe coding.
+
+5. Run the trained agent using 
+   ```py
+   python src/run_model.py models/best.keras
+   ```
+   and record its performance for 3 minutes.
+   1. How is the trained agent's performance compared to your performance?
+   2. Can you identify seme cases where the trained agent may perform poorly?
+
 
 ## Useful Links
 
