@@ -1,4 +1,4 @@
-# Tetris Deep Reinforcement Learning
+# Input Challenge: Programming and Machine Learning
 
 **Credit**: RL section is adapted from [tetris-ai](https://github.com/nuno-faria/tetris-ai.git).
 
