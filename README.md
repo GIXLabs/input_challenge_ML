@@ -133,14 +133,6 @@ Trains a policy network to mimic expert actions (from human or RL agent demonstr
 
 The training is based on the [Q Learning algorithm](https://en.wikipedia.org/wiki/Q-learning) for RL, and on supervised learning for imitation.
 
-## Results
-
-For 2000 episodes, with epsilon ending at 1500, the agent kept going for too long around episode 1460, so it had to be terminated. Here is a chart with the maximum score every 50 episodes, until episode 1450:
-
-![results](./assets/results.svg)
-
-Note: Decreasing the `epsilon_end_episode` could make the agent achieve better results in a smaller number of episodes.
-
 ## Tips and Troubleshooting
 
 - **Data Quality:** The more diverse and skillful your demonstrations, the better your imitation policy will be.
