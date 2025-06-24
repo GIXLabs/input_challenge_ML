@@ -2,6 +2,9 @@ import cv2
 from tetris import Tetris
 from time import sleep
 import time
+import os
+import numpy as np
+import datetime
 
 KEY_LEFT = 2   # Left arrow (user system)
 KEY_RIGHT = 3  # Right arrow (user system)
@@ -12,6 +15,11 @@ KEY_R = ord('r')
 
 # Tunable gravity delay in milliseconds
 GRAVITY_DELAY = 500  # Lower is faster gravity (e.g., 500ms)
+
+# At the top, after imports
+DATA_DIR = os.path.join(os.path.dirname(__file__), '..', 'data')
+os.makedirs(DATA_DIR, exist_ok=True)
+data = []
 
 def main():
     env = Tetris()
@@ -112,6 +120,27 @@ def main():
             # else: piece moved down by one
         if state_changed:
             env.render()
+            # --- Data collection for behavioral cloning ---
+            # Get the current state (use env._get_board_props)
+            state = env._get_board_props(env.board)
+            # Map key to action index
+            if key == KEY_LEFT:
+                action = 0
+            elif key == KEY_RIGHT:
+                action = 1
+            elif key == KEY_DOWN:
+                action = 2
+            elif key == KEY_UP:
+                action = 3
+            else:
+                action = -1
+            if action != -1:
+                data.append((state, action))
+
+    if data:
+        timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'human_demo_{timestamp}.npy'
+        np.save(os.path.join(DATA_DIR, filename), data)
 
     cv2.destroyAllWindows()
 

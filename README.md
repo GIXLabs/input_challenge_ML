@@ -1,11 +1,13 @@
 # Tetris Deep Reinforcement Learning
 
-**Credit**: Adapted from [tetris-ai](https://github.com/nuno-faria/tetris-ai.git).
+**Credit**: RL section is adapted from [tetris-ai](https://github.com/nuno-faria/tetris-ai.git).
 
 ## Project Overview
 
-- Train a bot to play [Tetris](https://en.wikipedia.org/wiki/Tetris) using deep reinforcement learning.
+- Train a bot to play [Tetris](https://en.wikipedia.org/wiki/Tetris) using deep reinforcement learning (RL) or imitation learning (IL).
 - Play Tetris using trained AI or as a human.
+- Collect demonstration data from both human and RL agents to improve imitation learning.
+
 
 ## Project Structure
 
@@ -13,10 +15,12 @@
 ./
 ├── assets/         # Images, gifs, diagrams
 ├── models/         # Saved Keras models
+├── data/           # Collected demonstration data (human and RL)
 ├── src/            # Scripts for training and inference
 │   ├── run.py              # Main training script for DQN agent
-│   ├── run_model.py        # Script to run inference with a trained model
-│   ├── play_human.py       # Play Tetris as a human
+│   ├── run_model.py        # Script to run inference, collect RL demos, or test imitation policy
+│   ├── behav_clone.py      # Train a policy network from demonstration data
+│   ├── play_human.py       # Play Tetris as a human and collect data
 │   ├── play_human_vs_ai.py # Play Tetris: human vs AI
 │   ├── tetris.py           # Tetris game logic (used by scripts)
 │   ├── dqn_agent.py        # DQN agent implementation
@@ -48,22 +52,44 @@ First 10000 points, after some training.
 
 ## Usage
 
-- **Train the agent:**
-  ```sh
-  python src/run.py
-  ```
-  (Hyperparameters can be changed in `src/run.py`.)
+### 1. **Train the RL agent:**
+```sh
+python src/run.py
+```
+(Hyperparameters can be changed in `src/run.py`.)
 
-- **Play with a trained model:**
-  ```sh
-  python src/run_model.py models/best.keras
-  ```
+### 2. **Collect Human Demonstration Data:**
+```sh
+python src/play_human.py
+```
+- Each session is saved as a separate file in the `data/` directory (e.g., `human_demo_YYYYMMDD_HHMMSS.npy`).
+- Play multiple games to collect more data.
 
-- **View logs with TensorBoard:**
-  ```sh
-  tensorboard --logdir ./logs
-  ```
-  Then click on the url of your local host to view the board.
+### 3. **Collect RL Demonstration Data:**
+```sh
+python src/run_model.py models/best.keras
+```
+- In RL mode, the script will save RL agent demonstrations in `data/` (e.g., `rl_demo_YYYYMMDD_HHMMSS.npy`).
+- You can interrupt with Ctrl+C to save partial data.
+
+### 4. **Train an Imitation Policy (Behavioral Cloning):**
+```sh
+python src/behav_clone.py
+```
+- This script loads all `human_demo_*.npy` and `rl_demo_*.npy` files from `data/` and trains a policy network.
+- The trained policy is saved in `models/policy_bc.keras`.
+
+### 5. **Test a Trained Policy (Imitation or RL):**
+```sh
+python src/run_model.py models/policy_bc.keras
+```
+- The script auto-detects the model type and runs in the appropriate mode.
+
+### 6. **View logs with TensorBoard:**
+```sh
+tensorboard --logdir ./logs
+```
+Then click on the url of your local host to view the board.
 
 ## Environment
 
@@ -74,6 +100,18 @@ Main dependencies (see `environment.yml` for full list):
 - numpy
 - tqdm
 - matplotlib
+- scikit-learn
+- opencv-python
+
+## State and Action Format
+
+- **State:** `[lines_cleared, holes, total_bumpiness, sum_height]` (4 features from the board)
+- **Action:** Integer encoding:
+    - 0 = left
+    - 1 = right
+    - 2 = down
+    - 3 = rotate
+- RL data is automatically converted to this format for imitation learning.
 
 ## How does it work
 
@@ -83,50 +121,17 @@ At first, the agent will play random moves, saving the states and the given rewa
 
 Since in reinforcement learning once an agent discovers a good 'path' it will stick with it, it was also considered an exploration variable (that decreases over time), so that the agent picks sometimes a random action instead of the one it considers the best. This way, it can discover new 'paths' to achieve higher scores.
 
-#### Training
+#### Imitation Learning (Behavioral Cloning)
 
-The training is based on the [Q Learning algorithm](https://en.wikipedia.org/wiki/Q-learning). Instead of using just the current state and reward obtained to train the network, it is used Q Learning (that considers the transition from the current state to the future one) to find out what is the best possible score of all the given states **considering the future rewards**, i.e., the algorithm is not greedy. This allows for the agent to take some moves that might not give an immediate reward, so it can get a bigger one later on (e.g. waiting to clear multiple lines instead of a single one).
+Trains a policy network to mimic expert actions (from human or RL agent demonstrations) by learning directly from (state, action) pairs, without using reward signals during training.
 
-The neural network will be updated with the given data (considering a play with reward *reward* that moves from *state* to *next_state*, the latter having an expected value of *Q_next_state*, found using the prediction from the neural network):
-
-if not terminal state (last round): *Q_state* = *reward* + *discount* × *Q_next_state*
-else: *Q_state* = *reward*
-
-#### Best Action
-
-Most of the deep Q Learning strategies used output a vector of values for a certain state. Each position of the vector maps to some action (ex: left, right, ...), and the position with the higher value is selected.
-
-However, the strategy implemented was slightly different. For some round of Tetris, the states for all the possible moves will be collected. Each state will be inserted in the neural network, to predict the score obtained. The action whose state outputs the biggest value will be played.
-
-#### Game State
-
-It was considered several attributes to train the network. Since there were many, after several tests, a conclusion was reached that only the first four present were necessary to train:
-
-- **Number of lines cleared**
-- **Number of holes**
-- **Bumpiness** (sum of the difference between heights of adjacent pairs of columns)
-- **Total Height**
-- Max height
-- Min height
-- Max bumpiness
-- Next piece
-- Current piece
-
-#### Game Score
-
-Each block placed yields 1 point. When clearing lines, the given score is $number\_lines\_cleared^2 \times board\_width$. Losing a game subtracts 1 point.
-
-## Implementation
-
-The code was implemented using `Python`. For the neural network, it was used the framework `Keras`.
-
-#### Internal Structure
-
-The agent is formed by a deep neural network, with variable number of layers, neurons per layer, activation functions, loss function, optimizer, etc. It was chosen a neural network with 2 hidden layers (32 neurons each); the activations `ReLu` for the inner layers and the `Linear` for the last one; `Mean Squared Error` as the loss function; `Adam` as the optimizer; `Epsilon` (exploration) starting at 1 and ending at 0, when the number of episodes reaches 75%; `Discount` at 0.95 (significance given to the future rewards, instead of the immediate ones).
+- Collect (state, action) pairs from human or RL agent play.
+- Train a policy network to predict the action given the state (supervised learning).
+- The policy can then be used to play Tetris by itself.
 
 #### Training
 
-For the training, the replay queue had size 20000, with a random sample of 512 selected for training each episode, using 1 epoch.
+The training is based on the [Q Learning algorithm](https://en.wikipedia.org/wiki/Q-learning) for RL, and on supervised learning for imitation.
 
 ## Results
 
@@ -136,47 +141,12 @@ For 2000 episodes, with epsilon ending at 1500, the agent kept going for too lon
 
 Note: Decreasing the `epsilon_end_episode` could make the agent achieve better results in a smaller number of episodes.
 
-## Your Tasks
+## Tips and Troubleshooting
 
-1. Navigate to `play_human.py`. Connect your controller to your laptop.
-   1. Uncomment Line 27.
-   2. Test buttons on your controller, and find their corresponding code for Lines 6-9. Update the code accordingly.
-   3. Once you complete step 1-2, comment out Line 27.
-
-2. Activate your virtual environment using
-    ```sh
-    conda activate ML-env
-    ```
-    Run the Python script to activate human-play mode:
-    ```py
-    python play_human.py
-    ```
-
-3. Play Tetris for 3 minutes and record your score. 
-   1. How is your experience with the controller?
-   2. What is your strategy to maximize the score?
-
-4. Navigate to `dqn_agent.py` and find `train` function. Complete the following code block (Lines 154 and 156) based on our discussion on Q-learning:
-    ```py
-    # Build xy structure to fit the model in batch (better performance)
-    for i, (state, _, reward, done) in enumerate(batch):
-        if not done:
-            # Partial Q formula
-            # Your code here
-        else:
-            # Your code here
-    ```
-You can achieve this by either following our discussion on Q-learning and control flow, or trying out vibe coding.
-
-5. Run the trained agent using 
-   ```py
-   python src/run_model.py models/best.keras
-   ```
-   and record its performance for 3 minutes.
-   1. How is the trained agent's performance compared to your performance?
-   2. Can you identify seme cases where the trained agent may perform poorly?
-
-6. If you get stuck on any of these tasks, feel free to ask or refer to the code in `tetris-ai/`
+- **Data Quality:** The more diverse and skillful your demonstrations, the better your imitation policy will be.
+- **Ctrl+C:** You can safely interrupt data collection or RL runs with Ctrl+C; data will be saved.
+- **ESC in RL mode:** Not supported due to OpenCV limitations; use Ctrl+C instead.
+- **Action Format:** All actions are converted to integers for training, even if RL data originally used tuples.
 
 ## Useful Links
 

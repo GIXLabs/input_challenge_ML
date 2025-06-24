@@ -151,9 +151,9 @@ class DQNAgent:
             for i, (state, _, reward, done) in enumerate(batch):
                 if not done:
                     # Partial Q formula
-                    # Your code here
+                    new_q = reward + self.discount * next_qs[i] # Your code here
                 else:
-                    # Your code here
+                    new_q = reward # Your code here
 
                 x.append(state)
                 y.append(new_q)
